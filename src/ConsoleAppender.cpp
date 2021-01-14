@@ -17,6 +17,8 @@
 // STL
 #include <iostream>
 
+// Termcolor
+#include <termcolor.hpp>
 
 /**
  * \class ConsoleAppender
@@ -31,34 +33,51 @@
  * ConsoleAppender::ignoreEnvironmentPattern(true)
  */
 
-
 ConsoleAppender::ConsoleAppender()
-  : AbstractStringAppender()
-  , m_ignoreEnvPattern(false)
+	: AbstractStringAppender()
+	, m_ignoreEnvPattern(false)
 {
-  setFormat("[%{type:-7}] <%{function}> %{message}\n");
+	setFormat("[%{type:-7}] <%{function}> %{message}\n");
 }
-
 
 QString ConsoleAppender::format() const
 {
-  const QString envPattern = QString::fromLocal8Bit(qgetenv("QT_MESSAGE_PATTERN"));
-  return (m_ignoreEnvPattern || envPattern.isEmpty()) ? AbstractStringAppender::format() : (envPattern + "\n");
+	const QString envPattern = QString::fromLocal8Bit(qgetenv("QT_MESSAGE_PATTERN"));
+	return (m_ignoreEnvPattern || envPattern.isEmpty()) ? AbstractStringAppender::format() : (envPattern + "\n");
 }
-
 
 void ConsoleAppender::ignoreEnvironmentPattern(bool ignore)
 {
-  m_ignoreEnvPattern = ignore;
+	m_ignoreEnvPattern = ignore;
 }
-
 
 //! Writes the log record to the std::cerr stream.
 /**
  * \sa AbstractStringAppender::format()
  */
-void ConsoleAppender::append(const QDateTime& timeStamp, Logger::LogLevel logLevel, const char* file, int line,
-                             const char* function, const QString& category, const QString& message)
+void ConsoleAppender::append(const QDateTime &timeStamp, Logger::LogLevel logLevel, const char *file, int line,
+                             const char *function, const QString &category, const QString &message)
 {
-  std::cerr << qPrintable(formattedString(timeStamp, logLevel, file, line, function, category, message));
+	switch (logLevel)
+	{
+		case Logger::Trace:
+			std::cerr << termcolor::magenta;
+			break;
+		case Logger::Debug:
+			std::cerr << termcolor::green;
+			break;
+		case Logger::Info:
+			std::cerr << termcolor::white;
+			break;
+		case Logger::Warning:
+			std::cerr << termcolor::yellow;
+			break;
+		case Logger::Error:
+			std::cerr << termcolor::red;
+			break;
+		case Logger::Fatal:
+			std::cerr << termcolor::red;
+			break;
+	}
+	std::cerr << qPrintable(formattedString(timeStamp, logLevel, file, line, function, category, message)) << termcolor::reset;
 }
